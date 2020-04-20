@@ -60,8 +60,9 @@
       </el-form-item>
 
       <!-- 课程简介 TODO -->
+      <!-- 课程简介-->
       <el-form-item label="课程简介">
-        <el-input v-model="courseInfo.description" placeholder=" " />
+        <tinymce :height="300" v-model="courseInfo.description" />
       </el-form-item>
 
       <!-- 课程封面 TODO -->
@@ -96,27 +97,52 @@
 <script>
 import courseApi from "@/api/edu/course";
 import subjectApi from "@/api/edu/subject";
+import Tinymce from "@/components/Tinymce";
 export default {
+  components: { Tinymce },
   data() {
     return {
       saveBtnDisabled: false,
       courseInfo: {
-          cover:'/static/1.png'
+        cover: "/static/1.png"
       },
       teacherList: [],
       subjectOneList: [],
       subjectTwoList: [],
-      BASE_API: process.env.BASE_API
+      BASE_API: process.env.BASE_API,
+      courseId: ""
     };
   },
   created() {
+    if (this.$route.params && this.$route.params.id) {
+      this.courseId = this.$route.params.id;
+      this.getInfo();
+    } else {
+      this.getListTeacher();
+      this.getOneSubject();
+    }
     this.getListTeacher();
     this.getOneSubject();
   },
   methods: {
+    getInfo() {
+      courseApi.getCourseInfo(this.courseId).then(response => {
+        this.courseInfo = response.data.courseInfoVo;
+        subjectApi.getSubjectList().then(response => {
+          this.subjectOneList = response.data.list;
+          for (var i = 0; i < this.subjectOneList.length; i++) {
+            var oneSubject = this.subjectOneList[i];
+            if (this.courseInfo.subjectParentId == oneSubject.id) {
+              this.subjectTwoList = oneSubject.children;
+            }
+          }
+        });
+        this.getListTeacher();
+      });
+    },
     //上传成功调用的方法
-    handleAvatarSuccess(res,file) {
-        this.courseInfo.cover = res.data.url
+    handleAvatarSuccess(res, file) {
+      this.courseInfo.cover = res.data.url;
     },
     //上传之前调的方法
     beforeAvatarUpload() {
@@ -152,7 +178,8 @@ export default {
         this.teacherList = response.data.items;
       });
     },
-    saveOrUpdate() {
+    //添加课程
+    addCourse() {
       courseApi.addCourseInfo(this.courseInfo).then(response => {
         this.$message({
           type: "success",
@@ -162,7 +189,32 @@ export default {
           path: "/course/chapter/" + response.data.courseId
         });
       });
+    },
+    updateCourse(){
+      courseApi.updateCourseInfo(this.courseInfo).then(response =>{
+        this.$message({
+          type: "success",
+          message: "修改课程信息成功!"
+        });
+        this.$router.push({
+          path: "/course/chapter/" + this.courseId
+        });
+      })
+    },
+    saveOrUpdate() {
+      if(!this.courseInfo.id)
+      {
+        this.addCourse()
+      }
+      else{
+        this.updateCourse()
+      }
     }
   }
 };
 </script>
+<style scoped>
+.tinymce-container {
+  line-height: 29px;
+}
+</style>
