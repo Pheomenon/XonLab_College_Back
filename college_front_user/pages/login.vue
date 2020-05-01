@@ -43,9 +43,9 @@
 <script>
   import '~/assets/css/sign.css'
   import '~/assets/css/iconfont.css'
-//   import cookie from 'js-cookie'
+  import cookie from 'js-cookie'
 
-//   import loginApi from '@/api/login'
+  import loginApi from '@/api/login'
   export default {
     layout: 'sign',
 
@@ -61,22 +61,18 @@
 
     methods: {
       submitLogin(){
+        this.$refs['userForm'].validate((valid) => {
+          if (valid) {
             loginApi.submitLogin(this.user).then(response => {
-              if(response.data.success){
-
-                //把token存在cookie中、也可以放在localStorage中
-                cookie.set('guli_token', response.data.data.token, { domain: 'localhost' })
-                //登录成功根据token获取用户信息
-                loginApi.getLoginInfo().then(response => {
-                  
-                  this.loginInfo = response.data.data.item
-                  //将用户信息记录cookie
-                  cookie.set('guli_ucenter', this.loginInfo, { domain: 'localhost' })
-                  //跳转页面
-                  window.location.href = "/";
-                })
-              }
+              cookie.set('token',response.data.data.token,{domain: 'localhost'})
+              loginApi.getLoginUserInfo().then(response =>{
+                //获取用户信息
+                cookie.set('ucenter',response.data.data.userInfo,{domain: 'localhost'})
+                window.location.href = "/"
+              })
             })
+          }
+        })
       },
 
       checkPhone (rule, value, callback) {
