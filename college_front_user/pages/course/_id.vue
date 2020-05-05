@@ -34,12 +34,12 @@
               </span>
             </section>
             <section class="c-attr-mt">
-              <a href="#" title="立即观看" class="comm-btn c-btn-3">立即观看</a>
+              <a @click="createOrders()" href="#" title="立即购买" class="comm-btn c-btn-3">立即购买</a>
             </section>
           </section>
         </aside>
         <aside class="thr-attr-box">
-          <ol class="thr-attr-ol clearfix">
+          <ol class="thr-attr-ol">
             <li>
               <p>&nbsp;</p>
               <aside>
@@ -107,7 +107,7 @@
                             </a>
                             <ol class="lh-menu-ol" style="display: block;">
                               <li class="lh-menu-second ml30" v-for="video in chapter.children" :key="video.id">
-                                <a href="#" title>
+                                <a :href="'/player/'+video.videoSourceId" target="_blank">
                                   <span class="fr">
                                     <i class="free-icon vam mr10">免费试听</i>
                                   </span>
@@ -137,7 +137,7 @@
                   <li>
                     <div class="u-face">
                       <a href="#">
-                        <img :src="courseWebVo.avatar" width="50" height="50" alt>
+                        <img height="357px" :src="courseWebVo.avatar" width="50" alt>
                       </a>
                     </div>
                     <section class="hLh30 txtOf">
@@ -161,14 +161,24 @@
 
 <script>
 import courseApi from '@/api/course'
+import ordersApi from '@/api/orders'
 export default {
   asyncData({params,error}){
     return courseApi.getCourseInfo(params.id).then(response => {
       return{
         courseWebVo: response.data.data.courseWebVo,
-        chapterVideoList: response.data.data.chapterVideoList
+        chapterVideoList: response.data.data.chapterVideoList,
+        courseId: params.id
       }
     })
+  },
+  methods:{
+    createOrders(){
+      ordersApi.createOrders(this.courseId).then(response => {
+        response.data.data.orderId
+        this.$router.push({path:'/orders/'+response.data.data.orderId})
+      })
+    }
   }
 };
 </script>
